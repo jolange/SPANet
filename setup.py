@@ -25,7 +25,10 @@ setup(
         'sympy',
         'pyyaml',
         'opt_einsum',
-        'scikit-learn'
+        'scikit-learn',
+        'rich',
+        'tensorboard',
+        'tensorboardx'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
