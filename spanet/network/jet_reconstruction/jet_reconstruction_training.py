@@ -124,7 +124,8 @@ class JetReconstructionTraining(JetReconstructionNetwork):
             total_loss: List[Tensor],
             assignments: List[Tensor],
             masks: Tensor,
-            weights: Tensor
+            weights: Tensor,
+            log_metrics: bool = True
     ) -> List[Tensor]:
         if len(self.event_info.event_transpositions) == 0:
             return total_loss
@@ -133,10 +134,12 @@ class JetReconstructionTraining(JetReconstructionNetwork):
         kl_loss = self.symmetric_divergence_loss(assignments, masks)
         kl_loss = (weights * kl_loss).sum() / masks.sum()
 
-        with torch.no_grad():
-            self.log("loss/symmetric_loss", kl_loss, sync_dist=True)
-            if torch.isnan(kl_loss):
-                raise ValueError("Symmetric KL Loss has diverged.")
+        if log_metrics:
+            with torch.no_grad():
+                self.log("loss/symmetric_loss", kl_loss, sync_dist=True)
+
+        if torch.isnan(kl_loss):
+            raise ValueError("Symmetric KL Loss has diverged.")
 
         return total_loss + [self.options.kl_loss_scale * kl_loss]
 
@@ -144,7 +147,8 @@ class JetReconstructionTraining(JetReconstructionNetwork):
             self,
             total_loss: List[Tensor],
             predictions: Dict[str, Tensor],
-            targets:  Dict[str, Tensor]
+            targets:  Dict[str, Tensor],
+            log_metrics: bool = True
     ) -> List[Tensor]:
         regression_terms = []
 
@@ -166,8 +170,9 @@ class JetReconstructionTraining(JetReconstructionNetwork):
             )
             current_loss = torch.mean(current_loss)
 
-            with torch.no_grad():
-                self.log(f"loss/regression/{key}", current_loss, sync_dist=True)
+            if log_metrics:
+                with torch.no_grad():
+                    self.log(f"loss/regression/{key}", current_loss, sync_dist=True)
 
             regression_terms.append(self.options.regression_loss_scale * current_loss)
 
@@ -177,7 +182,8 @@ class JetReconstructionTraining(JetReconstructionNetwork):
             self,
             total_loss: List[Tensor],
             predictions: Dict[str, Tensor],
-            targets: Dict[str, Tensor]
+            targets: Dict[str, Tensor],
+            log_metrics: bool = True
     ) -> List[Tensor]:
         classification_terms = []
 
@@ -195,8 +201,9 @@ class JetReconstructionTraining(JetReconstructionNetwork):
 
             classification_terms.append(self.options.classification_loss_scale * current_loss)
 
-            with torch.no_grad():
-                self.log(f"loss/classification/{key}", current_loss, sync_dist=True)
+            if log_metrics:
+                with torch.no_grad():
+                    self.log(f"loss/classification/{key}", current_loss, sync_dist=True)
 
         return total_loss + classification_terms
 

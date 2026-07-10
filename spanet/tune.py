@@ -86,7 +86,7 @@ def set_spanet_trial(base_options, max_epochs, cpus_per_trial, workers_per_cpu):
             callbacks=[
                 TuneReportCallback(
                     {
-                        "loss": "loss/total_loss",
+                        "val_loss": "loss/validation_total_loss",
                         "val_avg_accuracy": "validation_average_jet_accuracy"
                     },
                     on="validation_end"
@@ -131,7 +131,7 @@ def tune_spanet(
 
     reporter = CLIReporter(
         parameter_columns=list(config.keys()),
-        metric_columns=["loss", "val_avg_accuracy", "training_iteration"]
+        metric_columns=["val_loss", "val_avg_accuracy", "training_iteration"]
     )
     
     if gpus_per_trial > 0:
