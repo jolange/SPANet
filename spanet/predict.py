@@ -25,6 +25,9 @@ def create_hdf5_output(
                         f"{SpecialKey.Inputs}/{input_name}/{feature_name}",
                         data=input_dataset[SpecialKey.Inputs][input_name][feature_name]
                     )
+            # NEW: keep the original truth next to the predictions under a separate name.
+            if SpecialKey.Targets in input_dataset:
+                input_dataset.copy(input_dataset[SpecialKey.Targets], output, name="LABELS")
 
         # Construct the assignment structure. Output both the top assignment and associated probabilities.
         for event_particle in dataset.event_info.event_particles:
